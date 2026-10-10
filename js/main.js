@@ -131,10 +131,17 @@ function toMessage(d) {
 }
 
 const thanks = $('#thanks');
-function showThanks(text) {
+const thanksWa = $('.js-thanks-wa');
+const thanksOk = $('.js-thanks-ok');
+function showThanks(text, waLink) {
   if (text) $('.js-thanks-text').textContent = text;
-  if (thanks.showModal) thanks.showModal(); else alert(text || 'Заявка принята');
+  thanksWa.hidden = !waLink;
+  thanksOk.hidden = !!waLink;
+  if (waLink) thanksWa.href = waLink;
+  thanks.showModal();
 }
+thanksWa.addEventListener('click', () => setTimeout(() => thanks.close(), 300));
+thanks.addEventListener('click', (e) => { if (e.target === thanks) thanks.close(); });
 
 $$('.js-lead-form').forEach((form) => {
   form.addEventListener('submit', async (e) => {
@@ -149,9 +156,11 @@ $$('.js-lead-form').forEach((form) => {
     const btn = form.querySelector('button[type="submit"]');
 
     if (!CONFIG.formEndpoint) {
-      // Обработчик ещё не подключён — отправляем заявку через WhatsApp
-      window.open('https://wa.me/' + CONFIG.whatsapp + '?text=' + encodeURIComponent(toMessage(data)), '_blank', 'noopener');
-      showThanks('Мы открыли WhatsApp с готовым сообщением — отправьте его, и диспетчер сразу ответит.');
+      // Обработчик ещё не подключён — предлагаем отправить заявку через WhatsApp
+      showThanks(
+        'Остался один шаг: нажмите кнопку ниже, откроется WhatsApp с готовой заявкой. Отправьте её, и диспетчер сразу ответит.',
+        'https://wa.me/' + CONFIG.whatsapp + '?text=' + encodeURIComponent(toMessage(data))
+      );
       form.reset();
       if (form === calcForm) updateCalc();
       return;
